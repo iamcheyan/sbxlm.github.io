@@ -69,6 +69,81 @@
         }
       })();
     </script>
+    <script>
+      (function () {
+        var STORAGE_KEY = 'sbkd:last-scheme';
+        var DEFAULT_LABEL = '声笔自然';
+
+        function getSelectLabelEl() {
+          return document.querySelector('.n-select .n-base-selection-input__content');
+        }
+        function getSelectClickableEl() {
+          return document.querySelector('.n-select .n-base-selection-label');
+        }
+        function getCurrentLabel() {
+          var el = getSelectLabelEl();
+          return el ? (el.textContent || '').trim() : '';
+        }
+        function saveCurrent() {
+          var val = getCurrentLabel();
+          if (val) try { localStorage.setItem(STORAGE_KEY, val); } catch (_) {}
+        }
+        function openDropdown() {
+          var clickable = getSelectClickableEl();
+          if (clickable) clickable.click();
+        }
+        function findOptionNodes() {
+          return document.querySelectorAll('.n-base-select-option, .n-select-option, [role="option"]');
+        }
+        function clickOptionByLabel(label, attempt) {
+          attempt = attempt || 0;
+          if (attempt > 20) return; // ~1.4s max
+          var opts = findOptionNodes();
+          if (!opts || opts.length === 0) {
+            openDropdown();
+            return setTimeout(function () { clickOptionByLabel(label, attempt + 1); }, 70);
+          }
+          var target = Array.prototype.find.call(opts, function (n) {
+            var t = (n.textContent || '').trim();
+            return t === label;
+          });
+          if (target) {
+            target.click();
+          } else {
+            setTimeout(function () { clickOptionByLabel(label, attempt + 1); }, 70);
+          }
+        }
+        function restore() {
+          var saved = '';
+          try { saved = localStorage.getItem(STORAGE_KEY) || ''; } catch (_) {}
+          var desired = saved || DEFAULT_LABEL;
+          if (!desired) return;
+          if (getCurrentLabel() === desired) return;
+          openDropdown();
+          clickOptionByLabel(desired, 0);
+        }
+
+        function boot() {
+          var el = getSelectLabelEl();
+          if (!el) return false;
+          // start watching for changes to persist
+          saveCurrent();
+          var mo = new MutationObserver(function () { saveCurrent(); });
+          mo.observe(el, { childList: true, characterData: true, subtree: true });
+          restore();
+          return true;
+        }
+
+        if (!boot()) {
+          var obs = new MutationObserver(function () {
+            if (boot()) obs.disconnect();
+          });
+          obs.observe(document.documentElement, { childList: true, subtree: true });
+          document.addEventListener('DOMContentLoaded', boot, { once: true });
+          window.addEventListener('load', boot, { once: true });
+        }
+      })();
+    </script>
     
   </body>
 </html>

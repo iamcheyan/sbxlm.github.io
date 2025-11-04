@@ -5208,3 +5208,13 @@ a[data-v-f645aba9]:hover {
 .n-menu-item-content-header {
   overflow: visible !important;
 }
+
+/* custom: make the main content container full width */
+.content-container[data-v-c56858ca] {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+.VPDoc.has-aside .content-container[data-v-c56858ca] {
+  max-width: 100% !important;
+  width: 100% !important;
+}
